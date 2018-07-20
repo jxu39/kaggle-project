@@ -2,7 +2,7 @@ Did some preliminary analysis on the data.
 
 Files:
 
-- data_analysis.html: can be opened by a browser.
+- data_analysis.html: download it to your local computer, then it can be opened by a browser.
 
 - data_analysis.ipynb: needs to install Jupyter Notebook to open it. It is OK if you do not have it installed, because all the content of this file can be viewed in data_analysis.html, which can be opened by a browser. 
 
