@@ -1,4 +1,4 @@
-Did some preliminary analysis on the data. 
+To begin with, did some initial study on the data. 
 
 Files:
 
