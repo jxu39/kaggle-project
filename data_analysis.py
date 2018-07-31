@@ -58,6 +58,11 @@ def normalize(df, cols):
     res_df = pd.DataFrame(data = res) # Converts dictionary to DataFrame    
     return res_df
 
+# Fill in missing data with its median
+def fill_with_median(data_frame):
+    """This function will fill the missing value in the data frame with median value of each column"""
+    return data_frame.fillna(value=data_frame.median(axis=0, skipna=True), inplace=True)
+
 
 #-----------------------------------------------------------------------------------------------
 #                            load csv data
@@ -89,12 +94,16 @@ missing_values(app_train_ext, ext_source_cols)
 missing_values(app_test_ext, ext_source_cols)
 
 # option 1: filling missing values with 0
-app_train_ext_fillna = app_train_ext.fillna(0.0)
-app_test_ext_fillna = app_test_ext.fillna(0.0)
+# app_train_ext_fillna = app_train_ext.fillna(0.0)
+# app_test_ext_fillna = app_test_ext.fillna(0.0)
 
 # option 2: remove missing values
-app_train_ext_removed_nan = app_train_ext.dropna(subset = ext_source_cols)
-app_test_ext_removed_nan = app_test_ext.dropna(subset = ext_source_cols)
+# app_train_ext_removed_nan = app_train_ext.dropna(subset = ext_source_cols)
+# app_test_ext_removed_nan = app_test_ext.dropna(subset = ext_source_cols)
+
+# option 3: fill missing values with the median values
+for column in ext_source_cols:
+    fill_with_median(app_train.loc[:, column])
 
 #-----------------------------------------------------------------------------------------------
 #                            Train model (logistic regression) and predict
