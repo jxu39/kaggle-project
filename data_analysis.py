@@ -184,6 +184,6 @@ def do_machine_learning(train_data, test_data, classifier):
 
 classifiers = ['logistic_regression', 'random_forest']
 
-for classifiers in classifiers:
-    do_machine_learning(split_train, split_test, classifiers)
+for classifier in classifiers:
+    do_machine_learning(split_train, split_test, classifier)
 
