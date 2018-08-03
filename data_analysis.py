@@ -58,10 +58,11 @@ def normalize(df, cols):
     res_df = pd.DataFrame(data = res) # Converts dictionary to DataFrame    
     return res_df
 
+
 # Fill in missing data with its median
 def fill_with_median(data_frame):
     """This function will fill the missing value in the data frame with median value of each column"""
-    return data_frame.fillna(value=data_frame.median(axis=0, skipna=True), inplace=True)
+    return data_frame.fillna(value=data_frame.median(axis=0, skipna=True))
 
 
 #-----------------------------------------------------------------------------------------------
@@ -102,17 +103,17 @@ missing_values(app_test_ext, ext_source_cols)
 # app_test_ext_removed_nan = app_test_ext.dropna(subset = ext_source_cols)
 
 # option 3: fill missing values with the median values
-for column in ext_source_cols:
-    fill_with_median(app_train.loc[:, column])
+ext_train_filled_median = fill_with_median(app_train[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']])
+ext_test_filled_median = fill_with_median(app_test[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']])
 
 #-----------------------------------------------------------------------------------------------
 #                            Train model (logistic regression) and predict
 #-----------------------------------------------------------------------------------------------
 
 # preparation
-x_train = app_train_ext_fillna[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']]
-y_train = app_train_ext_fillna[['TARGET']]
-x_test = app_test_ext_fillna
+x_train = ext_train_filled_median
+y_train = app_train[['TARGET']]
+x_test = ext_test_filled_median
 
 # call normalization function
 x_train_norm = normalize(x_train, ext_source_cols)
