@@ -28,11 +28,10 @@ from sklearn.ensemble import RandomForestClassifier
 #                            self-defined functions
 #-----------------------------------------------------------------------------------------------
 
-# plot histograms
-def plot_histograms(df, cols):
-    for col in cols:
-        df.hist(column = col, bins = 100) 
- 
+#----------------------------------- 
+#   missing value related functions
+#-----------------------------------
+
 # show the percentage of missing values for each column
 def missing_values(df, cols):
     for col in cols:
@@ -40,6 +39,26 @@ def missing_values(df, cols):
         num_rows = len(df)
         percentage_missing_values = 100 * num_missing_values / float(num_rows)
         #print('Percentage of missing values in column {0} = {1} / {2} = {3}%'.format(col, num_missing_values, num_rows, percentage_missing_values))
+
+        # Fill in missing data with its median
+def fill_with_median(data_frame):
+    """This function will fill the missing value in the data frame with median value of each column"""
+    return data_frame.fillna(value=data_frame.median(axis=0, skipna=True))
+
+def fill_with_0(data_frame):
+    return data_frame.fillna(0.0)
+
+#----------------------------------- 
+#   visualization data
+#-----------------------------------
+# plot histograms
+def plot_histograms(df, cols):
+    for col in cols:
+        df.hist(column = col, bins = 100) 
+ 
+#----------------------------------- 
+#   Normalization
+#-----------------------------------
 
 # Normlaize
 def normalize(df, cols):
@@ -54,11 +73,63 @@ def normalize(df, cols):
     res_df = pd.DataFrame(data = res) # Converts dictionary to DataFrame    
     return res_df
 
+# scale
+def scale(dataframe):
+    dataframe_scale = preprocessing.scale(dataframe)
+    return dataframe_scale
 
-# Fill in missing data with its median
-def fill_with_median(data_frame):
-    """This function will fill the missing value in the data frame with median value of each column"""
-    return data_frame.fillna(value=data_frame.median(axis=0, skipna=True))
+#---------------------------------------------------------------
+#    Train model, make prediction
+#--------------------------------------------------------------
+
+def do_machine_learning_split(x_train, y_train, x_test, y_test, classifier):
+    print('**********************************')
+    print('classifier = {0}:'.format(classifier))
+
+       
+    # train model
+    model = None
+    if classifier == 'logistic_regression':
+        model = LogisticRegression()
+    elif classifier == 'random_forest':
+        model = RandomForestClassifier(n_estimators = 10)   
+    model.fit(x_train, y_train)
+
+    # prediction
+    prediction_proba = model.predict_proba(x_test)[:, 1]
+
+    print('prediction_proba:')
+    print(prediction_proba)
+
+    # AUC (Area Under ROC) <- the larger the better.
+    auc = roc_auc_score(y_test, prediction_proba)
+    print('auc = {0}'.format(auc))
+    
+   
+def do_machine_learning_submit(x_train, y_train, x_test, classifier, ID):
+    print('**********************************')
+    print('classifier = {0}:'.format(classifier))
+       
+    # train model
+    model = None
+    if classifier == 'logistic_regression':
+        model = LogisticRegression()
+    elif classifier == 'random_forest':
+        model = RandomForestClassifier(n_estimators = 10)   
+    model.fit(x_train, y_train)
+
+    # prediction
+    prediction_proba = model.predict_proba(x_test)[:, 1]
+
+    print('prediction_proba:')
+    print(prediction_proba)
+
+    # Submission dataframe
+    submit['SK_ID_CURR'] = ID
+    submit['TARGET'] = prediction_proba
+
+    # convert to csv
+    submit.to_csv('log_reg' + classifier + '.csv', index = False)
 
 
 #-----------------------------------------------------------------------------------------------
@@ -78,112 +149,70 @@ app_test = pd.read_csv('application_test.csv')
 #-----------------------------------------------------------------------------------------------
 
 #choose features 'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3'
-app_train_ext = app_train[['SK_ID_CURR', 'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3', 'TARGET']]
-app_test_ext = app_test[['SK_ID_CURR', 'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']]
-ext_source_cols = ['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']
+feature = ['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3', 'DAYS_BIRTH', 'DAYS_EMPLOYED']
+app_train_chosen = app_train[feature]
+app_test_chosen = app_test[feature]
+
+#-----------------------------------------------------------------------------------------------
+#                        Transformation for some columns
+#-----------------------------------------------------------------------------------------------
+app_train_chosen.loc[:,'DAYS_BIRTH'] /= -360
+app_test_chosen.loc[:,'DAYS_BIRTH'] /= -360
+
+# Create an anomalous flag column
+app_train_chosen['DAYS_EMPLOYED_ANOM'] = app_train_chosen["DAYS_EMPLOYED"] == 365243
+# Replace the anomalous values with nan
+app_train_chosen['DAYS_EMPLOYED'].replace({365243: np.nan}, inplace = True)
+app_train_chosen['DAYS_EMPLOYED'].plot.hist(title = 'Days Employment Histogram');
+plt.xlabel('Days Employment');
+app_test_chosen['DAYS_EMPLOYED_ANOM'] = app_test_chosen["DAYS_EMPLOYED"] == 365243
+app_test_chosen["DAYS_EMPLOYED"].replace({365243: np.nan}, inplace = True)
 
 #-----------------------------------------------------------------------------------------------
 #                            prepocessing (missing values)
 #-----------------------------------------------------------------------------------------------
 
+# missing values
 # call function to show the percentages of missing values
-missing_values(app_train_ext, ext_source_cols)
-missing_values(app_test_ext, ext_source_cols)
+missing_values(app_train_chosen, feature)
+missing_values(app_test_chosen, feature)
+app_train_chosen_missing_filled = fill_with_median(app_train_chosen)
+app_test_filled_missing_filled = fill_with_median(app_test_chosen)
 
-# option 1: filling missing values with 0
-# app_train_ext_fillna = app_train_ext.fillna(0.0)
-# app_test_ext_fillna = app_test_ext.fillna(0.0)
+# normalization
+app_train_chosen_missing_filled_scaled = scale(app_train_chosen_missing_filled)
+app_test_filled_missing_filled_scaled = scale(app_test_filled_missing_filled)
 
-# option 2: remove missing values
-# app_train_ext_removed_nan = app_train_ext.dropna(subset = ext_source_cols)
-# app_test_ext_removed_nan = app_test_ext.dropna(subset = ext_source_cols)
 
-# option 3: fill missing values with the median values
-ext_train_filled_median = fill_with_median(app_train[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3', 'TARGET']])
-ext_test_filled_median = fill_with_median(app_test[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']])
-
-#-----------------------------------------------------------------------------------------------
-#                            Train model (logistic regression) and predict
-#-----------------------------------------------------------------------------------------------
-
-# preparation
-x_train = ext_train_filled_median
-y_train = app_train[['TARGET']]
-x_test = ext_test_filled_median
-
-# call normalization function
-x_train_norm = normalize(x_train, ext_source_cols)
-x_test_norm = normalize(x_test, ext_source_cols)
-
-# train model
-logreg = LogisticRegression()
-logreg.fit(x_train_norm, y_train)
-
-# prediction
-y_pred = logreg.predict(x_test_norm)
-logreg_prediction = logreg.predict_proba(x_test_norm)[:, 1]
-
-# Submission dataframe
-submit = app_test[['SK_ID_CURR']]
-submit['TARGET'] = logreg_prediction
-#submit.head()
-
-# convert to csv
-submit.to_csv('log_reg.csv', index = False)
-
-#-----------------------------------------------------------------------------------------------
-#                            Split original train data into train and test data
-#-----------------------------------------------------------------------------------------------
-
-original_train_size = len(ext_train_filled_median)
-print('original_train_size = {0}'.format(original_train_size)) # 307,511
+#-------------------------------------------------------------------------------------------------------
+#  Train model (logistic regression) and predict with splitted data
+#-------------------------------------------------------------------------------------------------------
 
 # Split original train data into: train data (80%), test data (20%)
-split_train, split_test = train_test_split(ext_train_filled_median, test_size = 0.2)
-print('split_train size = {0}, split_test size = {1}'.format(len(split_train), len(split_test)))
-print('split_train ratio = {0}, split_test ratio = {1}'.format(len(split_train) / original_train_size, len(split_test) / original_train_size))
+x_train, x_test = train_test_split(app_train_chosen_missing_filled_scaled, test_size = 0.2)
+y_train, y_test = train_test_split(app_train['target'], test_size = 0.2)
 
-
-#-----------------------------------------------------------------------------------------------
-#                            Train model, make prediction and output test metric
-#-----------------------------------------------------------------------------------------------
-
-def do_machine_learning(train_data, test_data, classifier):
-    print('**********************************')
-    print('classifier = {0}:'.format(classifier))
-
-    x_train = train_data[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']]
-    y_train = train_data[['TARGET']]
-    x_test = test_data[['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']]
-    y_test = test_data[['TARGET']]
-
-    # call normalization function
-    x_train_norm = normalize(x_train, ext_source_cols)
-    x_test_norm = normalize(x_test, ext_source_cols)
-
-    # train model
-    model = None
-
-    if classifier == 'logistic_regression':
-        model = LogisticRegression()
-    elif classifier == 'random_forest':
-        model = RandomForestClassifier(n_estimators = 10)
-        
-    model.fit(x_train_norm, y_train)
-
-    # prediction
-    # prediction = model.predict(x_test_norm)
-    prediction_proba = model.predict_proba(x_test_norm)[:, 1]
-
-    print('prediction_proba:')
-    print(prediction_proba)
-
-    # AUC (Area Under ROC) <- the larger the better.
-    auc = roc_auc_score(y_test, prediction_proba)
-    print('auc = {0}'.format(auc))
+# print out
+original_train_size = len(app_train_chosen_missing_filled_scaled)
+print('original_train_size = {0}'.format(original_train_size)) # 307,511
+print('split_train size = {0}, split_test size = {1}'.format(len(x_train), len(x_test)))
+print('split_train ratio = {0}, split_test ratio = {1}'.format(len(x_train) / original_train_size, len(x_test) / original_train_size))
 
 classifiers = ['logistic_regression', 'random_forest']
 
 for classifier in classifiers:
-    do_machine_learning(split_train, split_test, classifier)
+    do_machine_learning_split(x_train, x_test, y_train, y_test, classifier)
+    
+#-----------------------------------------------------------------------------------------------
+#   Train model (logistic regression) and predict with given test data, T
+#-----------------------------------------------------------------------------------------------
+
+x_train = app_train_chosen_missing_filled_scaled
+x_test = app_test_filled_missing_filled_scaled
+y_test = app_train['target']
+
+ID =  app_test[['SK_ID_CURR']]
+for classifier in classifiers:
+    do_machine_learning_submit(x_train, x_test, y_train, classifier, ID)
+    
 
