@@ -9,6 +9,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from sklearn.linear_model import LogisticRegression
+
+from sklearn import datasets, linear_model
+from sklearn.metrics import mean_squared_error, r2_score
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, roc_auc_score
@@ -35,7 +38,7 @@ def fill_with_median(data_frame):
     return data_frame.fillna(value=data_frame.median(axis=0, skipna=True))
 
 
-def custom_data_machine_learning(x_train, y_train, x_test, y_test, classifier):
+def custom_data_machine_learning(x_train, y_train, x_test, classifier):
     print('**********************************')
     print('classifier = {0}:'.format(classifier))
 
@@ -50,6 +53,8 @@ def custom_data_machine_learning(x_train, y_train, x_test, y_test, classifier):
         model = LogisticRegression()
     elif classifier == 'random_forest':
         model = RandomForestClassifier(n_estimators=10)
+    elif classifier == 'linear_regression':
+        model = linear_model.LinearRegression()
 
     model.fit(x_train_norm, y_train)
 
@@ -77,9 +82,9 @@ def fill_ext():
     y_train = cat_notnull_with_ext1['EXT_SOURCE_1']
 
     x_test = cat_null_with_ext1.drop(['EXT_SOURCE_1'], axis=1)
-    y_test = cat_null_with_ext1['EXT_SOURCE_1']
+    # y_test = cat_null_with_ext1['EXT_SOURCE_1']
 
-    custom_data_machine_learning(x_train, y_train, x_test, y_test, 'logistic_regression')
+    custom_data_machine_learning(x_train, y_train, x_test, 'linear_regression')
 
 
 
@@ -92,4 +97,4 @@ def fill_ext():
 # Create a pandas dataframe from the csv file.
 app_train = pd.read_csv('application_train.csv')
 app_test = pd.read_csv('application_test.csv')
-something()
+fill_ext()
