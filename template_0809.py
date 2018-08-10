@@ -138,6 +138,62 @@ def do_machine_learning_submit(x_train, y_train, x_test, classifier, ID):
 
     # convert to csv
     submit.to_csv('log_reg_' + classifier + '.csv', index = False)
+    
+def execute(app_train, app_test, feature):
+    #-----------------------------------------------------------------------------------------------
+    #                            features choosing
+    #-----------------------------------------------------------------------------------------------
+
+    #choose features 'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3'
+
+    app_train_chosen = app_train[feature]
+    app_test_chosen = app_test[feature]
+    
+    #-----------------------------------------------------------------------------------------------
+    #                            prepocessing (missing values)
+    #-----------------------------------------------------------------------------------------------
+    
+    # missing values
+    # call function to show the percentages of missing values
+    missing_values(app_train_chosen, feature)
+    missing_values(app_test_chosen, feature)
+    app_train_chosen_missing_filled = fill_with_median(app_train_chosen)
+    app_test_filled_missing_filled = fill_with_median(app_test_chosen)
+    
+    # normalization
+    app_train_chosen_missing_filled_scaled = scale(app_train_chosen_missing_filled)
+    app_test_filled_missing_filled_scaled = scale(app_test_filled_missing_filled)
+    
+    
+    #-------------------------------------------------------------------------------------------------------
+    #  Train model (logistic regression) and predict with splitted data
+    #-------------------------------------------------------------------------------------------------------
+    
+    # Split original train data into: train data (80%), test data (20%)
+    x_train, x_test = train_test_split(app_train_chosen_missing_filled_scaled, test_size = 0.2)
+    y_train, y_test = train_test_split(app_train['TARGET'], test_size = 0.2)
+    
+    # print out
+    original_train_size = len(app_train_chosen_missing_filled_scaled)
+    print('original_train_size = {0}'.format(original_train_size)) # 307,511
+    print('split_train size = {0}, split_test size = {1}'.format(len(x_train), len(x_test)))
+    print('split_train ratio = {0}, split_test ratio = {1}'.format(len(x_train) / original_train_size, len(x_test) / original_train_size))
+    
+    classifiers = ['logistic_regression', 'random_forest']
+    
+    for classifier in classifiers:
+        do_machine_learning_split(x_train, x_test, y_train, y_test, classifier)
+    #-----------------------------------------------------------------------------------------------
+    #   Train model (logistic regression) and predict with given test data, T
+    #-----------------------------------------------------------------------------------------------
+    
+    x_train = app_train_chosen_missing_filled_scaled
+    x_test = app_test_filled_missing_filled_scaled
+    y_train = app_train['TARGET']
+    
+    ID =  app_test[['SK_ID_CURR']]
+    for classifier in classifiers:
+        do_machine_learning_submit(x_train, y_train, x_test, classifier, ID)
 
 
 #-----------------------------------------------------------------------------------------------
@@ -147,64 +203,12 @@ def do_machine_learning_submit(x_train, y_train, x_test, classifier, ID):
 #Create a pandas dataframe from the csv file. 
 app_train = pd.read_csv('application_train.csv')
 app_test = pd.read_csv('application_test.csv')
-
+feature = ['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']
+execute(app_train, app_test,feature)
 #Print some rows
 #app_train.head(3)
 #app_test.head(3)
 
-#-----------------------------------------------------------------------------------------------
-#                            features choosing
-#-----------------------------------------------------------------------------------------------
 
-#choose features 'EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3'
-feature = ['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']
-app_train_chosen = app_train[feature]
-app_test_chosen = app_test[feature]
-
-#-----------------------------------------------------------------------------------------------
-#                            prepocessing (missing values)
-#-----------------------------------------------------------------------------------------------
-
-# missing values
-# call function to show the percentages of missing values
-missing_values(app_train_chosen, feature)
-missing_values(app_test_chosen, feature)
-app_train_chosen_missing_filled = fill_with_median(app_train_chosen)
-app_test_filled_missing_filled = fill_with_median(app_test_chosen)
-
-# normalization
-app_train_chosen_missing_filled_scaled = scale(app_train_chosen_missing_filled)
-app_test_filled_missing_filled_scaled = scale(app_test_filled_missing_filled)
-
-
-#-------------------------------------------------------------------------------------------------------
-#  Train model (logistic regression) and predict with splitted data
-#-------------------------------------------------------------------------------------------------------
-
-# Split original train data into: train data (80%), test data (20%)
-x_train, x_test = train_test_split(app_train_chosen_missing_filled_scaled, test_size = 0.2)
-y_train, y_test = train_test_split(app_train['TARGET'], test_size = 0.2)
-
-# print out
-original_train_size = len(app_train_chosen_missing_filled_scaled)
-print('original_train_size = {0}'.format(original_train_size)) # 307,511
-print('split_train size = {0}, split_test size = {1}'.format(len(x_train), len(x_test)))
-print('split_train ratio = {0}, split_test ratio = {1}'.format(len(x_train) / original_train_size, len(x_test) / original_train_size))
-
-classifiers = ['logistic_regression', 'random_forest']
-
-for classifier in classifiers:
-    do_machine_learning_split(x_train, x_test, y_train, y_test, classifier)
-#-----------------------------------------------------------------------------------------------
-#   Train model (logistic regression) and predict with given test data, T
-#-----------------------------------------------------------------------------------------------
-
-x_train = app_train_chosen_missing_filled_scaled
-x_test = app_test_filled_missing_filled_scaled
-y_train = app_train['TARGET']
-
-ID =  app_test[['SK_ID_CURR']]
-for classifier in classifiers:
-    do_machine_learning_submit(x_train, y_train, x_test, classifier, ID)
     
 
