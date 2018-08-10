@@ -11,10 +11,11 @@ Decision Tree: 0.5304570916426096
 Linear Classifier with SGD: 0.7178525754160756
 
 todo: 
-1. Complete the code of filling missing values with prediction. 
-2. Deal with categorical columns and include them as features.
-3. Gather all features and do PCA on them.
-4. Explore other tables.
+1. Replace some functions (like normalize) by standard libarary functions.
+2. Complete the code of filling missing values with prediction. 
+3. Deal with categorical columns and include them as features.
+4. Gather all features and do PCA on them.
+5. Explore other tables.
 '''
 
 import numpy as np 
