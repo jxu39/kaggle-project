@@ -86,6 +86,22 @@ def scale(dataframe):
     dataframe_scale = preprocessing.scale(dataframe)
     return dataframe_scale
 
+#pca
+def run_pca(app_train):
+    app_train_only_numerics = app_train.select_dtypes(include=[np.number])      
+    app_train_only_numerics_drop_target = app_train_only_numerics.drop('TARGET', 1)
+    app_train_only_numerics_drop_target_fillna = app_train_only_numerics_drop_target.fillna(0.0)
+
+    pca = PCA(n_components=10)
+    pca.fit_transform(app_train_only_numerics_drop_target_fillna)
+    print(pca.explained_variance_ratio_)
+    mean = pca.components_.mean(axis=0) 
+    std = pca.components_.std(axis=0) 
+    col = list( app_train_only_numerics_drop_target_fillna)
+    mc = np.argpartition(mean, -4)[-4:]
+    print ("the most important features:")
+    for i in mc:
+       print(col[i])
 #---------------------------------------------------------------
 #    Train model, make prediction
 #--------------------------------------------------------------
@@ -203,11 +219,13 @@ def execute(app_train, app_test, feature):
 #Create a pandas dataframe from the csv file. 
 app_train = pd.read_csv('application_train.csv')
 app_test = pd.read_csv('application_test.csv')
+
+# run pca
+run_pca(app_train)
+
+# execute
 feature = ['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']
 execute(app_train, app_test,feature)
-#Print some rows
-#app_train.head(3)
-#app_test.head(3)
 
 
     
