@@ -11,9 +11,10 @@ Decision Tree: 0.5304570916426096
 Linear Classifier with SGD: 0.7178525754160756
 
 todo: 
-I need to complete the code of filling missing values with prediction. 
-Note that this method has a bug: the prediction value range is different from the actual exter value range.
-
+1. Complete the code of filling missing values with prediction. 
+2. Deal with categorical columns and include them as features.
+3. Gather all features and do PCA on them.
+4. Explore other tables.
 '''
 
 import numpy as np 
@@ -45,8 +46,9 @@ class Parameters:
         self.target_name = None
         self.test_ratio = 0.3
         
+
 # Preprocesses data: normalize, fill in missing values with median
-class Preprocesser(Parameters):
+class Preprocessor(Parameters):
     def __init__(self, feature_names, target_name, is_for_filling_nan):
         Parameters.__init__(self)
         self.feature_names = feature_names
