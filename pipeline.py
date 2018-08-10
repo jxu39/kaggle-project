@@ -11,8 +11,8 @@ Decision Tree: 0.5304570916426096
 Linear Classifier with SGD: 0.7178525754160756
 
 todo: 
-1. Complete the code of filling missing values with prediction. This method has a bug: the prediction value range is different from the actual exter value range.
-2. In normalize, deal with max = 0.
+I need to complete the code of filling missing values with prediction. 
+Note that this method has a bug: the prediction value range is different from the actual exter value range.
 
 '''
 
@@ -45,7 +45,6 @@ class Parameters:
         self.target_name = None
         self.test_ratio = 0.3
         
-
 # Preprocesses data: normalize, fill in missing values with median
 class Preprocesser(Parameters):
     def __init__(self, feature_names, target_name, is_for_filling_nan):
@@ -54,7 +53,6 @@ class Preprocesser(Parameters):
         self.target_name = target_name
         self.is_for_filling_nan = is_for_filling_nan
 
-    # todo: deal with the max when feature values can be negative or 0
     def normalize(self, df):
         res = {} #Empty dictionary
         
