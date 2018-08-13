@@ -55,7 +55,7 @@ class Preprocessor(Parameters):
         self.feature_names = feature_names
         self.target_name = target_name
         self.is_for_filling_nan = is_for_filling_nan
-
+    '''
     def normalize(self, df):
         res = {} #Empty dictionary
         
@@ -67,7 +67,10 @@ class Preprocessor(Parameters):
         
         res_df = pd.DataFrame(data = res) # Converts dictionary to DataFrame    
         return res_df
-
+    '''
+    def normalize(self, df)
+        return preprocessing.scale(df)
+        
     def transform(self, df):
         df_features = df[self.feature_names]
 
@@ -137,6 +140,34 @@ class MissingValueFiller(Parameters):
         # Learn and predict
         learner = Learner(train, test, models_dic, self.feature_names, self.target_name, True)
         learner.transform()
+        
+# use PCA to obtain feature importance:
+class PCA(Parameters):
+    def __init__(self):
+        Parameters.__init__(self)
+
+    def transform(self):
+        # choose only numerical columns
+        app_train_only_numerics = self.app_train.select_dtypes(include=[np.number])      
+        app_train_only_numerics_drop_target = app_train_only_numerics.drop('TARGET', 1)
+        app_train_only_numerics_drop_target_fillna = app_train_only_numerics_drop_target.fillna(0.0)
+        
+        # run pca
+        pca = PCA(n_components=10)
+        pca.fit_transform(app_train_only_numerics_drop_target_fillna)
+        
+        # print out the explained variance ratio
+        print("The explained variance ratios are: ")
+        print(pca.explained_variance_ratio_)
+        
+        # heuristic approach to sort the features importances
+        mean = pca.components_.mean(axis=0) 
+        std = pca.components_.std(axis=0) 
+        col = list( app_train_only_numerics_drop_target_fillna)
+        mc = np.argpartition(mean, -4)[-4:]
+        print ("the most important features:")
+        for i in mc:
+           print(col[i])      
 
 class Application(Parameters):
     def __init__(self):
