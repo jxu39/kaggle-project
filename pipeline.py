@@ -11,7 +11,7 @@ Decision Tree: 0.5304570916426096
 Linear Classifier with SGD: 0.7178525754160756
 
 todo: 
-1. Replace some functions (like normalize) by standard libarary functions.
+1. Construct a function or class to generate a csv file for submission (the means we might not need to split the training data)
 2. Complete the code of filling missing values with prediction. 
 3. Deal with categorical columns and include them as features.
 4. Gather all features and do PCA on them.
@@ -55,19 +55,7 @@ class Preprocessor(Parameters):
         self.feature_names = feature_names
         self.target_name = target_name
         self.is_for_filling_nan = is_for_filling_nan
-    '''
-    def normalize(self, df):
-        res = {} #Empty dictionary
-        
-        for col in df.columns:
-            df_col = df[col]
-            max = df_col.max()
-            df_col_norm = df_col / max
-            res[col] = df_col_norm
-        
-        res_df = pd.DataFrame(data = res) # Converts dictionary to DataFrame    
-        return res_df
-    '''
+
     def normalize(self, df)
         return preprocessing.scale(df)
         
